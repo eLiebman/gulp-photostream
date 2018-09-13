@@ -10,7 +10,8 @@ const gulp = require('gulp'),
       csso = require('gulp-csso'),
      image = require('gulp-image'),
        del = require('del'),
-    useref = require('gulp-useref');
+    useref = require('gulp-useref'),
+       run = require('run-sequence');
 
 //Concatenate and Minify all JavaScript files, keeping a sourcemap
 //Rename all.min.js, save to dist/scripts
@@ -45,18 +46,18 @@ gulp.task('images', () => {
     .pipe(gulp.dest('dist/content'))
 });
 
+//Copy icons folder to dist
+gulp.task('icons', () => {
+  return gulp.src('icons/**')
+    .pipe(gulp.dest('dist/icons'));
+});
+
 //Replace references in index.html with new minfied files
 //Move into dist folder
 gulp.task('html', () => {
   return gulp.src('index.html')
     .pipe(useref())
     .pipe(gulp.dest('dist'));
-});
-
-//Copy icons folder to dist
-gulp.task('icons', () => {
-    return gulp.src('icons/**')
-      .pipe(gulp.dest('dist/icons'));
 });
 
 //Delete all files in the dist folder
@@ -66,25 +67,27 @@ gulp.task('clean', () => {
 
 //Build runs all above scripts,
 //Clean runs first
-gulp.task('build', ['clean'], () => {
-  gulp.start('scripts');
-  gulp.start('styles');
-  gulp.start('images');
-  gulp.start('html');
-  gulp.start('icons');
+gulp.task('build', ['clean'], (callback) => {
+  return run(['scripts', 'styles', 'images', 'icons'], 'html', callback);
+});
+
+//Connect to Server
+gulp.task('connect', () => {
+  return connect.server({
+    livereload: true,
+    port: 3000
+  });
 });
 
 //Watch for changes in .js and .scss files,
 //Reload is built into 'styles' and 'scripts' tasks
 gulp.task('watch', () => {
   gulp.watch('./sass/**.scss', ['styles']);
-  gulp.watch('./js/**', ['scripts']);
+  return gulp.watch('./js/**', ['scripts']);
 });
 
-//By default ('gulp' command) run 'build', 'watch', and start the server
-gulp.task('default',['build', 'watch'], () => {
-  connect.server({
-    livereload: true,
-    port: 3000
-  });
+//By default ('gulp' command)
+//run 'build' first, then 'watch' and 'connect' in parallel
+gulp.task('default', (callback) => {
+  run('build', ['connect', 'watch'], callback);
 });
