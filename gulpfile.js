@@ -74,6 +74,7 @@ gulp.task('build', ['clean'], (callback) => {
 //Connect to Server
 gulp.task('connect', () => {
   return connect.server({
+    root: 'dist',
     livereload: true,
     port: 3000
   });
