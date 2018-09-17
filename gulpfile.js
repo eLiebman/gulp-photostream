@@ -87,8 +87,11 @@ gulp.task('watch', () => {
   return gulp.watch('./js/**', ['scripts']);
 });
 
-//By default ('gulp' command)
 //run 'build' first, then 'watch' and 'connect' in parallel
+gulp.task('gulp', (callback) => {
+  run('build', ['connect', 'watch'], callback);
+});
+
 gulp.task('default', (callback) => {
   run('build', ['connect', 'watch'], callback);
 });
